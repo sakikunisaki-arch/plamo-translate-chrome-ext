@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PLaMo Translate</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ヘッダーバー -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-title-row">
+          <h1 class="brand-title">PLaMo Translate</h1>
+        </div>
+        <p id="headerModelLabel" class="brand-subtitle">plamo-3-translate-2b</p>
+      </div>
+      <div class="header-status">
+        <div
+          id="connectionPill"
+          class="status-pill status-disconnected"
+          role="status"
+          aria-live="polite"
+          title="LM Studio の接続状態"
+        >
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="connectionPillText" class="status-text">確認中...</span>
+        </div>
+        <button
+          id="refreshConnectionBtn"
+          type="button"
+          class="icon-btn"
+          title="接続状態を再確認"
+          aria-label="接続状態を再確認"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <polyline points="21 3 21 9 15 9" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 3タブナビゲーション -->
+    <nav class="tab-nav" role="tablist" aria-label="翻訳機能タブ">
+      <button
+        id="tabBtnPage"
+        type="button"
+        class="tab-btn active"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panelPage"
+        data-tab="page"
+      >
+        ページ翻訳
+      </button>
+      <button
+        id="tabBtnText"
+        type="button"
+        class="tab-btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panelText"
+        data-tab="text"
+      >
+        テキスト翻訳
+      </button>
+      <button
+        id="tabBtnSettings"
+        type="button"
+        class="tab-btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panelSettings"
+        data-tab="settings"
+      >
+        設定
+      </button>
+    </nav>
+
+    <main class="tab-content-area">
+      <!-- Tab 1: ページ翻訳 -->
+      <section
+        id="panelPage"
+        class="tab-panel active"
+        role="tabpanel"
+        aria-labelledby="tabBtnPage"
+      >
+        <div class="card tab-info-card">
+          <div class="tab-info-label">対象ページ</div>
+          <div id="activeTabTitle" class="tab-info-title">読み込み中...</div>
+          <div id="activeTabHost" class="tab-info-host">-</div>
+        </div>
+
+        <div class="card">
+          <div class="field-label mb-8">表示モード</div>
+          <div class="segmented-control" role="radiogroup" aria-label="ページ翻訳の表示モード">
+            <label class="segmented-option">
+              <input
+                type="radio"
+                name="pageDisplayMode"
+                value="bilingual"
+                id="modeBilingualRadio"
+                checked
+              />
+              <span>原文＋訳文（併記）</span>
+            </label>
+            <label class="segmented-option">
+              <input
+                type="radio"
+                name="pageDisplayMode"
+                value="replace"
+                id="modeReplaceRadio"
+              />
+              <span>訳文のみ（置換）</span>
+            </label>
+          </div>
+
+          <div class="page-actions-grid">
+            <button id="pageStartBtn" type="button" class="btn btn-primary">
+              ページ全体を翻訳
+            </button>
+            <div class="page-sub-actions">
+              <button id="pageStopBtn" type="button" class="btn btn-danger-soft" disabled>
+                翻訳を中止
+              </button>
+              <button id="pageRestoreBtn" type="button" class="btn btn-secondary">
+                原文に戻す
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card progress-card">
+          <div class="section-header">
+            <span class="field-label">進捗状況</span>
+            <span id="pageStatusBadge" class="badge badge-idle">待機中</span>
+          </div>
+
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pageProgressTrack">
+            <div id="pageProgressBar" class="progress-fill" style="width: 0%;"></div>
+          </div>
+
+          <div class="counters-grid">
+            <div class="counter-box">
+              <span class="counter-label">完了 / 全体</span>
+              <span id="pageCountProgress" class="counter-value">0 / 0</span>
+            </div>
+            <div class="counter-box">
+              <span class="counter-label">スキップ</span>
+              <span id="pageCountSkipped" class="counter-value">0</span>
+            </div>
+            <div class="counter-box">
+              <span class="counter-label">エラー</span>
+              <span id="pageCountFailed" class="counter-value">0</span>
+            </div>
+          </div>
+
+          <div id="pageErrorBox" class="banner banner-error hidden" role="alert"></div>
+        </div>
+      </section>
+
+      <!-- Tab 2: テキスト翻訳 -->
+      <section
+        id="panelText"
+        class="tab-panel hidden"
+        role="tabpanel"
+        aria-labelledby="tabBtnText"
+      >
+        <div class="card">
+          <div class="section-header">
+            <label for="sourceTextarea" class="field-label">原文（英語）</label>
+            <span class="shortcut-hint">Cmd/Ctrl + Enter で翻訳</span>
+          </div>
+          <textarea
+            id="sourceTextarea"
+            class="text-input source-textarea"
+            rows="5"
+            placeholder="翻訳したい英語テキストを入力、またはページ上のテキストを選択して取得してください..."
+          ></textarea>
+
+          <div class="toolbar-row">
+            <div class="toolbar-actions">
+              <button id="getSelectionBtn" type="button" class="btn btn-secondary btn-sm">
+                選択テキストを取得
+              </button>
+              <button id="clearTextBtn" type="button" class="btn btn-ghost btn-sm">
+                クリア
+              </button>
+            </div>
+            <div class="style-select-wrap">
+              <label for="textFormSelect" class="sr-only">文体</label>
+              <select id="textFormSelect" class="select-input select-sm" aria-label="翻訳の文体">
+                <option value="polite">敬体 (です・ます)</option>
+                <option value="plain">常体 (だ・である)</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="translateBtn" type="button" class="btn btn-primary btn-block">
+            翻訳する
+          </button>
+        </div>
+
+        <div class="card output-card">
+          <div class="section-header">
+            <span class="field-label">訳文（日本語）</span>
+            <div class="output-meta">
+              <span id="elapsedBadge" class="elapsed-badge hidden"></span>
+              <button id="copyOutputBtn" type="button" class="btn btn-ghost btn-xs" disabled>
+                コピー
+              </button>
+            </div>
+          </div>
+
+          <div id="textErrorBanner" class="banner banner-error hidden" role="alert"></div>
+
+          <div
+            id="translationOutput"
+            class="translation-output empty"
+            aria-live="polite"
+          >ここに翻訳結果が表示されます。</div>
+        </div>
+
+        <div class="card history-card">
+          <div class="section-header">
+            <h2 class="section-title">翻訳履歴</h2>
+            <button id="clearHistoryBtn" type="button" class="btn btn-ghost btn-xs">
+              履歴を消去
+            </button>
+          </div>
+          <div id="historyList" class="history-list">
+            <p class="empty-note">翻訳履歴はまだありません。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: 設定 -->
+      <section
+        id="panelSettings"
+        class="tab-panel hidden"
+        role="tabpanel"
+        aria-labelledby="tabBtnSettings"
+      >
+        <form id="settingsForm" class="settings-form" novalidate>
+          <div class="card">
+            <h2 class="section-title mb-12">LM Studio 接続設定</h2>
+
+            <div class="form-group">
+              <label for="settingBaseUrl" class="field-label">LM Studio URL</label>
+              <input
+                id="settingBaseUrl"
+                type="url"
+                class="text-input"
+                placeholder="http://localhost:1234"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="settingModelSelect" class="field-label">モデル</label>
+              <select id="settingModelSelect" class="select-input">
+                <option value="__custom__">手動入力（カスタム）</option>
+              </select>
+              <input
+                id="settingModelInput"
+                type="text"
+                class="text-input mt-6"
+                placeholder="plamo-3-translate-2b"
+                autocomplete="off"
+                aria-label="モデルIDを直接入力"
+              />
+              <p class="field-help">取得済みモデルから選択するか、モデルIDを直接入力してください。</p>
+            </div>
+
+            <div class="test-conn-row">
+              <button id="testConnectionBtn" type="button" class="btn btn-secondary btn-sm">
+                接続テスト
+              </button>
+            </div>
+
+            <div id="connectionTestResult" class="banner hidden" role="status" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-title mb-12">翻訳オプション</h2>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="settingForm" class="field-label">デフォルト文体</label>
+                <select id="settingForm" class="select-input">
+                  <option value="polite">敬体 (です・ます)</option>
+                  <option value="plain">常体 (だ・である)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="settingConcurrency" class="field-label">並列数 (1–4)</label>
+                <select id="settingConcurrency" class="select-input">
+                  <option value="1">1（推奨・安定）</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4（高速）</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="settingDisplayMode" class="field-label">ページ表示モード</label>
+                <select id="settingDisplayMode" class="select-input">
+                  <option value="bilingual">原文＋訳文（併記）</option>
+                  <option value="replace">訳文のみ（置換）</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="settingTemperature" class="field-label">Temperature (0.0–1.0)</label>
+                <input
+                  id="settingTemperature"
+                  type="number"
+                  class="text-input"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value="0.0"
+                />
+              </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input id="settingSkipJapanese" type="checkbox" checked />
+                <span>日本語ブロックをスキップ</span>
+              </label>
+            </div>
+
+            <div class="form-group mb-0">
+              <label for="settingGlossary" class="field-label">用語集（1行に1件）</label>
+              <textarea
+                id="settingGlossary"
+                class="text-input glossary-textarea"
+                rows="4"
+                placeholder="dashboard => 管理画面&#10;invoice => 請求書"
+              ></textarea>
+              <p class="field-help">`原文 => 訳語` の形式で指定します（`#` で始まる行はコメント）。</p>
+            </div>
+          </div>
+
+          <div id="settingsSavedBanner" class="banner banner-success hidden" role="status" aria-live="polite">
+            設定を保存しました。
+          </div>
+
+          <button id="saveSettingsBtn" type="submit" class="btn btn-primary btn-block">
+            設定を保存
+          </button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
