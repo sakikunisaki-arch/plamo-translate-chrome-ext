@@ -80,8 +80,11 @@ python3 tests/test_extension.py --live-lmstudio
 
 ## ライセンス・注意事項
 
+**Built with PLaMo**
+
 - 本拡張機能のソースコードは [MIT License](./LICENSE) の下で提供されます。
-- 本拡張機能は、ローカルの LM Studio API を呼び出す非公式のクライアント拡張機能です。
-- リポジトリには `plamo-3-translate-2b` のモデル本体（重みファイル）は含まれていません。
-- 翻訳モデル `plamo-3-translate-2b` の利用条件については、開発元である Preferred Networks 社の **PLaMo Community License** に従ってください。
+- 本拡張機能は、ローカルの LM Studio API を呼び出す非公式のサードパーティ製クライアント拡張機能です。株式会社 Preferred Networks および Element Labs, Inc. の公式製品・提携ではありません。
+- リポジトリには `plamo-3-translate-2b` のモデル本体（重みファイル）および LM Studio 本体は含まれていません。
+- 「PLaMo」は株式会社 Preferred Networks の商標、「LM Studio」は Element Labs, Inc. の商標です。
+- 翻訳モデル `plamo-3-translate-2b` の利用条件については株式会社 Preferred Networks の **PLaMo Community License** に、LM Studio の利用条件については Element Labs, Inc. の利用規約に従ってください。
 
